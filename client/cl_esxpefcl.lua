@@ -44,7 +44,6 @@ RegisterCommand("invoice", function()
 
     if input[1] and input[2] and input[3] then
         TriggerServerEvent('esx_pefcl:sv:CreateInvoice', tonumber(input[1]), nil , tonumber(input[2]), input[3])
-        --TriggerServerEvent('pefcl:createInvoice', tonumber(input[1]), tonumber(input[2]), input[3])
     end
 end)
 

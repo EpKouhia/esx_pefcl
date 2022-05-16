@@ -90,11 +90,12 @@ exports("CreateInvoice", CreateInvoice)
 ---@param sharedAccountName string
 ---@param label string
 ---@param amount number
---- Get a invoices
+--- Get all invoices
 RegisterServerEvent("esx_pefcl:sv:getInvoices" , function(playerId, sharedAccountName, label, amount)
 
 end)
 
+---@param source number
 -- Returns players cash amount to pefcl
 function getCash(source)
 	print("Trigger getCash")
@@ -102,6 +103,8 @@ function getCash(source)
 end
 exports("getCash", getCash)
 
+---@param source number
+---@param amount number
 -- Removes cash from the player
 function removeCash(source, amount)
 	print("Trigger removeCash")
@@ -109,6 +112,8 @@ function removeCash(source, amount)
 end
 exports("removeCash", removeCash)
 
+---@param source number
+---@param amount number
 -- Adds cash for the player
 function addCash(source, amount)
 	print("Trigger addCash")
