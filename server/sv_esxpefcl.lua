@@ -1,11 +1,15 @@
 -- Export Reference - pefcl
 -- AddCash = 'addCash',
+-- GetCash = 'getCash',
 -- RemoveCash = 'removeCash',
+-- GetAccounts = 'getAccounts',
+-- GetTotalBalance = 'getTotalBalance',
 -- AddBankBalance = 'addBankBalance',
 -- RemoveBankBalance = 'removeBankBalance',
 -- WithdrawMoney = 'withdrawMoney',
 -- DepositMoney = 'depositMoney',
 -- CreateInvoice = 'createInvoice',
+-- GetInvoices = 'getInvoices',
 -- LoadPlayer = 'loadPlayer',
 
 local ox_inventory = exports.ox_inventory
@@ -48,52 +52,53 @@ if GetResourceState('pefcl') ~= 'missing' then
     end)
 end
 
----@param playerId number
----@param sharedAccountName string
+---@param source number
 ---@param label string
 ---@param amount number
+---@param expiresAt? string
 --- Sending a invoice
-RegisterServerEvent("esx_pefcl:sv:CreateInvoice" , function(playerId, sharedAccountName, amount, label)
+RegisterServerEvent("esx_pefcl:sv:CreateInvoice" , function(source, amount, label, expiresAt)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
-	local xTarget = ESX.GetPlayerFromId(playerId)
+	local tPlayer = ESX.GetPlayerFromId(source)
 
-	print(xTarget.source)
-	print(label)
-	print(amount)
+	createInvoice(tPlayer.source, xPlayer.variables.firstName..' '..xPlayer.variables.lastName, tPlayer.variables.firstName..' '..tPlayer.variables.lastName, amount, label, expiresAt)
 
-	CreateInvoice(xPlayer.source, xTarget.source ,sharedAccountName, amount, label)
-
-	TriggerClientEvent('ox_lib:notify', src, {
+	TriggerClientEvent('ox_lib:notify', xPlayer.source, {
 		type = 'inform',
-		description = Locale("person_invoiced")..'  \n'..label..'  \n '..Locale("total")..tostring(amount)
+		description = Locale("person_invoiced")..'  \n  '..label..'  \n   '..Locale("total")..tostring(amount)
 	})
 
-	TriggerClientEvent('ox_lib:notify', src, {
+	TriggerClientEvent('ox_lib:notify', tPlayer.source, {
 		type = 'inform',
-		description = Locale("received_invoice")..'  \n'..label..'  \n '..Locale("total")..tostring(amount)
+		description = Locale("received_invoice")..'  \n  '..label..'  \n  '..Locale("total")..tostring(amount)
 	})
 end)
 
----@param target number
----@param sharedAccountName string
----@param label string
+---@param source number
+---@param from string
+---@param to string
 ---@param amount number
+---@param message string
+---@param expiresAt? string
 --- Sending a invoice
-CreateInvoice = function(source, target ,sharedAccountName, amount, label)
-	exports.pefcl:createInvoice(source ,{target, amount, label})
-	--TriggerEvent('pefcl:createInvoice', source, target, amount, label)
+createInvoice = function(source, from, to, amount, message, expiresAt)
+	exports.pefcl:createInvoice(source, {from = from, to = to, amount = amount, message = message, expiresAt = expiresAt})
 end
-exports("CreateInvoice", CreateInvoice)
+exports("createInvoice", createInvoice)
 
----@param playerId number
----@param sharedAccountName string
----@param label string
----@param amount number
+---@param source number
 --- Get all invoices
-RegisterServerEvent("esx_pefcl:sv:getInvoices" , function(playerId, sharedAccountName, label, amount)
-
+RegisterServerEvent("esx_pefcl:sv:getInvoices" , function(source)
+	return getInvoices(source)
 end)
+
+---@param source number
+--- Get all invoices
+getInvoices = function(source)
+	return exports.pefcl:getInvoices(source)
+end
+exports("getInvoices", getInvoices)
 
 ---@param source number
 -- Returns players cash amount to pefcl

@@ -40,10 +40,11 @@ RegisterCommand("invoice", function()
         { type = "input", label = "Source", icon = 'user' },
         { type = "input", label = "Amount", icon = 'euro-sign' },
         { type = "input", label = "Message", icon = 'comment-dollar' },
+        --{ type = "input", label = "Expiration (optional)", icon = 'calendar' },
     })
 
     if input[1] and input[2] and input[3] then
-        TriggerServerEvent('esx_pefcl:sv:CreateInvoice', tonumber(input[1]), nil , tonumber(input[2]), input[3])
+        TriggerServerEvent('esx_pefcl:sv:CreateInvoice', tonumber(input[1]), tonumber(input[2]), input[3], nil)
     end
 end)
 
