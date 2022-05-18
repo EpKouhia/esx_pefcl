@@ -48,3 +48,48 @@ RegisterCommand("invoice", function()
     end
 end)
 
+RegisterCommand("getinvoices", function()
+    local options = {}
+
+    local input = lib.inputDialog('Invoice Person', {
+        { type = "input", label = "Source", icon = 'user' },
+    })
+
+    local invoices = lib.callback.await('esx_pefcl:sv:getInvoices', tonumber(input[1]))
+
+    print(ESX.DumpTable(invoices))
+
+    if not invoices.data then
+        lib.registerContext({
+            id = 'esx_pefcl:getInvoices',
+            title = Locale('invoices'),
+            options = {
+                [Locale('no_invoices')] = {}
+            }
+        })
+
+        return lib.showContext('esx_pefcl:getInvoices')
+    else
+        for i = 1, #invoices.data do
+            print(i)
+            options[i] = {
+                metadata = {
+                    [Locale('sender')] = invoices.data[i].sender,
+                    [Locale('expires')] = invoices.data[i].expiresAt,
+                    [Locale('status')] = invoices.data[i].status,
+                    [Locale('amount')] = invoices.data[i].amount,
+                    [Locale('message')] = invoices.data[i].message,
+                }
+            }
+        end
+    
+        lib.registerContext({
+            id = 'esx_pefcl:getInvoices',
+            title = Locale('invoices'),
+            options = options
+        })
+    
+        lib.showContext('esx_pefcl:getInvoices')
+    end
+end)
+

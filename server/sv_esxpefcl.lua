@@ -12,8 +12,6 @@
 -- GetInvoices = 'getInvoices',
 -- LoadPlayer = 'loadPlayer',
 
-local ox_inventory = exports.ox_inventory
-
 if GetResourceState('pefcl') ~= 'missing' then
     AddEventHandler('esx:playerLoaded', function(playerId, xPlayer)
         repeat Wait(0) until GetResourceState('pefcl') == 'started'
@@ -25,6 +23,8 @@ if GetResourceState('pefcl') ~= 'missing' then
 		})
     end)
 
+	-- PEFCL will deal with player disconnecting (playerdropped) but if there is framework which supports relogging this could be a necessary feature
+	-- More Features discussed here: https://github.com/project-error/pefcl/issues/15
     -- AddEventHandler('esx:playerLogout', function(playerId)
     --     exports['pefcl']:unloadPlayer(playerId)
     -- end)
@@ -36,10 +36,6 @@ if GetResourceState('pefcl') ~= 'missing' then
             if next(xPlayers) then
                 for i=1, #xPlayers do
                     local xPlayer = xPlayers[i]
-
-					print(xPlayer.source)
-					print(xPlayer.identifier)
-					print(xPlayer.variables.firstName..' '..xPlayer.variables.lastName)
 
 					exports.pefcl:loadPlayer(xPlayer.source ,{
 						source = xPlayer.source,
@@ -62,25 +58,31 @@ RegisterServerEvent("esx_pefcl:sv:CreateInvoice" , function(source, amount, labe
 	local xPlayer = ESX.GetPlayerFromId(src)
 	local tPlayer = ESX.GetPlayerFromId(source)
 
-	createInvoice(tPlayer.source, xPlayer.variables.firstName..' '..xPlayer.variables.lastName, tPlayer.variables.firstName..' '..tPlayer.variables.lastName, amount, label, expiresAt)
+	createInvoice(xPlayer.source, xPlayer.identifier, tPlayer.identifier, amount, label, expiresAt)
 
+	-- Would maybe do notifications with NPWD app notifications but the current notification refactor branch is not merged yet into develop
+	-- https://github.com/project-error/npwd/tree/refactor/notifications
+	-- https://github.com/project-error/npwd
+	
 	TriggerClientEvent('ox_lib:notify', xPlayer.source, {
 		type = 'inform',
-		description = Locale("person_invoiced")..'  \n  '..label..'  \n   '..Locale("total")..tostring(amount)
+		description = Locale("person_invoiced")..' '..label..' '..Locale("total")..' '..tostring(amount)..Locale("currency"),
+		duration = 8000
 	})
 
 	TriggerClientEvent('ox_lib:notify', tPlayer.source, {
 		type = 'inform',
-		description = Locale("received_invoice")..'  \n  '..label..'  \n  '..Locale("total")..tostring(amount)
+		description = Locale("received_invoice")..' '..label..' '..Locale("total")..' '..tostring(amount)..Locale("currency"),
+		duration = 8000
 	})
 end)
 
 ---@param source number
----@param from string
----@param to string
+---@param from string --Identifier
+---@param to string --Identifier
 ---@param amount number
 ---@param message string
----@param expiresAt? string
+---@param expiresAt? string --2019-06-11
 --- Sending a invoice
 createInvoice = function(source, from, to, amount, message, expiresAt)
 	exports.pefcl:createInvoice(source, {from = from, to = to, amount = amount, message = message, expiresAt = expiresAt})
@@ -89,12 +91,11 @@ exports("createInvoice", createInvoice)
 
 ---@param source number
 --- Get all invoices
-RegisterServerEvent("esx_pefcl:sv:getInvoices" , function(source)
-	return getInvoices(source)
+lib.callback.register('esx_pefcl:sv:getInvoices', function(source)
+	local playerInvoices = getInvoices(source)
+	return playerInvoices
 end)
 
----@param source number
---- Get all invoices
 getInvoices = function(source)
 	return exports.pefcl:getInvoices(source)
 end
@@ -103,8 +104,7 @@ exports("getInvoices", getInvoices)
 ---@param source number
 -- Returns players cash amount to pefcl
 function getCash(source)
-	print("Trigger getCash")
-	return ox_inventory:GetItem(source, 'money', false, true)
+	return exports.ox_inventory:GetItem(source, 'money', false, true)
 end
 exports("getCash", getCash)
 
@@ -112,8 +112,7 @@ exports("getCash", getCash)
 ---@param amount number
 -- Removes cash from the player
 function removeCash(source, amount)
-	print("Trigger removeCash")
-	ox_inventory:RemoveItem(source, 'money', amount)
+	exports.ox_inventory:RemoveItem(source, 'money', amount)
 end
 exports("removeCash", removeCash)
 
@@ -121,25 +120,6 @@ exports("removeCash", removeCash)
 ---@param amount number
 -- Adds cash for the player
 function addCash(source, amount)
-	print("Trigger addCash")
-	ox_inventory:AddItem(source, 'money', amount)
+	exports.ox_inventory:AddItem(source, 'money', amount)
 end
 exports("addCash", addCash)
-
---[[ -- Get Playername
-function getPlayerName(source)
-	local src = source
-	local xPlayer = ESX.GetPlayerFromId(src)
-	local name = xPlayer.variables.firstName..' '..xPlayer.variables.lastName
-	return name
-end
-exports("getPlayerName", getPlayerName)
-
--- Get Player Identifier
-function getPlayerIdentifier(source)
-	local src = source
-	local xPlayer = ESX.GetPlayerFromId(src)
-	return xPlayer.identifier
-end
-exports("getPlayerIdentifier", getPlayerIdentifier) ]]
-
